@@ -19,23 +19,12 @@ public class CsvSplitter {
     private static final int CHUNK_SIZE = 10 * 1024 * 1024; // 100 MB
 
     public static void main(String[] args) throws InterruptedException {
-        WebClient webClient2 = WebClient.builder()
+        WebClient webClient = WebClient.builder()
                 .baseUrl("http://localhost:8080/api/v1/")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
 
-
-//
         List<TaxiTrip> taxiTrips = readTaxiTripFromCsv();
-//        TaxiTrip block = webClient2.post()
-//                .uri("/r2dbc/message")
-//                .body(Mono.just(taxiTrips.get(10)), TaxiTrip.class)
-//                .retrieve()
-//                .bodyToMono(TaxiTrip.class)
-//                .block();
-//        System.out.println(block);
-
-
 
         // Process the response
         Flux.fromIterable(taxiTrips)
@@ -43,7 +32,7 @@ public class CsvSplitter {
                     System.out.println(taxiTrip);
                     MultiValueMap<String, String> formData = toMap(taxiTrip);
 
-                        return webClient2.post()
+                        return webClient.post()
                                 .uri("/message")
                                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                                 .body(BodyInserters.fromValue(taxiTrip))
