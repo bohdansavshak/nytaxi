@@ -1,5 +1,6 @@
 package com.bohdansavshak.model;
 
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,8 +9,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.math.BigDecimal;
-
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,67 +16,69 @@ import java.math.BigDecimal;
 @Table("taxi_trip")
 public class TaxiTrip {
 
-    @Id
-    @Column("taxi_trip_id")
-    private Long id;
+  @Id
+  @Column("taxi_trip_id")
+  private Long id;
 
-    @Column("tpep_pickup_datetime")
-    private String tpepPickupDatetime;
+  @Column("tpep_pickup_datetime")
+  private String tpepPickupDatetime;
 
-    @Column("tpep_dropoff_datetime")
-    private String tpepDropoffDatetime;
+  @Column("tpep_dropoff_datetime")
+  private String tpepDropoffDatetime;
 
-    @Column("dropoff_day")
-    private String dropOffDay;
+  @Column("dropoff_day")
+  private Integer dropOffDay;
 
-    @Column("dropoff_month")
-    private String dropOffMonth;
+  @Column("dropoff_month")
+  private Integer dropOffMonth;
 
-    @Column("passenger_count")
-    private Integer passengerCount;
+  @Column("dropoff_year")
+  private Integer dropOffYear;
 
-    @Column("trip_distance")
-    private BigDecimal tripDistance;
+  @Column("passenger_count")
+  private Integer passengerCount;
 
-    @Column("pulocation_id")
-    private Integer puLocationId;
+  @Column("trip_distance")
+  private BigDecimal tripDistance;
 
-    @Column("dolocation_id")
-    private Integer doLocationId;
+  @Column("pulocation_id")
+  private Integer puLocationId;
 
-    @Column("store_and_fwd_flag")
-    private Boolean storeAndFwdFlag;
+  @Column("dolocation_id")
+  private Integer doLocationId;
 
-    @Column("fare_amount")
-    private BigDecimal fareAmount;
+  @Column("store_and_fwd_flag")
+  private Boolean storeAndFwdFlag;
 
-    @Column("extra")
-    private BigDecimal extra;
+  @Column("fare_amount")
+  private BigDecimal fareAmount;
 
-    @Column("mta_tax")
-    private BigDecimal mtaTax;
+  @Column("extra")
+  private BigDecimal extra;
 
-    @Column("improvement_surcharge")
-    private BigDecimal improvementSurcharge;
+  @Column("mta_tax")
+  private BigDecimal mtaTax;
 
-    @Column("tip_amount")
-    private BigDecimal tipAmount;
+  @Column("improvement_surcharge")
+  private BigDecimal improvementSurcharge;
 
-    @Column("tolls_amount")
-    private BigDecimal tollsAmount;
+  @Column("tip_amount")
+  private BigDecimal tipAmount;
 
-    @Column("total_amount")
-    private BigDecimal totalAmount;
+  @Column("tolls_amount")
+  private BigDecimal tollsAmount;
 
-    // relations
+  @Column("total_amount")
+  private BigDecimal totalAmount;
 
-    @Column("vendor_id")
-    private Long vendorId;
+  // relations
 
-    @Column("rate_code_id")
-    private Long rateCodeId;
+  @Column("vendor_id")
+  private Long vendorId;
 
-    @Column("payment_type_id")
-    private Long paymentTypeId;
+  @Column("rate_code_id")
+  private Long rateCodeId;
 
+  @Column("payment_type_id")
+  private Long paymentTypeId;
 }

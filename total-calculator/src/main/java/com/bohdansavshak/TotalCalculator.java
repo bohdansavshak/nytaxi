@@ -7,7 +7,7 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 @SpringBootApplication
 @EnableRedisRepositories
 public class TotalCalculator {
-    public static void main(String[] args) {
-        SpringApplication.run(TotalCalculator.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(TotalCalculator.class, args);
+  }
 }

@@ -1,9 +1,8 @@
 package com.bohdansavshak.model;
 
-import lombok.*;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
+import lombok.*;
 
 @Data
 @ToString
@@ -12,45 +11,45 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class TaxiTrip implements Serializable {
 
-    Long id;
+  Long id;
 
-    private String tpepPickupDatetime;
+  private String tpepPickupDatetime;
 
-    private String tpepDropoffDatetime;
+  private String tpepDropoffDatetime;
 
-    private String dropOffDay;
+  private Integer dropOffDay;
 
-    private String dropOffMonth;
+  private Integer dropOffMonth;
 
-    private int passengerCount;
+  private Integer dropOffYear;
 
-    private BigDecimal tripDistance;
+  private int passengerCount;
 
-    private int puLocationId;
+  private BigDecimal tripDistance;
 
-    private int doLocationId;
+  private int puLocationId;
 
-    private Boolean storeAndFwdFlag;
+  private int doLocationId;
 
-    private BigDecimal fareAmount;
+  private Boolean storeAndFwdFlag;
 
-    private BigDecimal extra;
+  private BigDecimal fareAmount;
 
-    private BigDecimal mtaTax;
+  private BigDecimal extra;
 
-    private BigDecimal improvementSurcharge;
+  private BigDecimal mtaTax;
 
-    private BigDecimal tipAmount;
+  private BigDecimal improvementSurcharge;
 
-    private BigDecimal tollsAmount;
+  private BigDecimal tipAmount;
 
-    private BigDecimal totalAmount;
+  private BigDecimal tollsAmount;
 
-    private Long vendorId;
+  private BigDecimal totalAmount;
 
-    private Long rateCodeId;
+  private Long vendorId;
 
-    private Long paymentTypeId;
+  private Long rateCodeId;
 
+  private Long paymentTypeId;
 }
-

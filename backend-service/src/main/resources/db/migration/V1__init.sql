@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS vendor
 -- Create the taxi_trip table if it doesn't exist
 CREATE TABLE IF NOT EXISTS taxi_trip
 (
-    taxi_trip_id          SERIAL NOT NULL PRIMARY KEY,
+    taxi_trip_id          BIGSERIAL NOT NULL PRIMARY KEY,
     vendor_id             INTEGER,
     rate_code_id          INTEGER,
     payment_type_id       INTEGER,
@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS taxi_trip
     tpep_dropoff_datetime TEXT,
     dropoff_day           INTEGER,
     dropoff_month         INTEGER,
+    dropoff_year          INTEGER,
     passenger_count       INTEGER,
     trip_distance         DECIMAL,
     pulocation_id         INTEGER,

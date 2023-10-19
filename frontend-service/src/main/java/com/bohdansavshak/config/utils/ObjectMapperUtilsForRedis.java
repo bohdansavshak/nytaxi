@@ -10,22 +10,20 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ObjectMapperUtilsForRedis {
 
-    private final ObjectMapper mapper = createObjectMapper();
+  private final ObjectMapper mapper = createObjectMapper();
 
-    public static final String STUDENT_KEY = "BK";
+  public static final String STUDENT_KEY = "BK";
 
-    private ObjectMapper createObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        objectMapper.registerModule(new JavaTimeModule());
-        return objectMapper;
-    }
+  private ObjectMapper createObjectMapper() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS, false);
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    objectMapper.registerModule(new JavaTimeModule());
+    return objectMapper;
+  }
 
-    public <T> T objectMapper(Object obj, Class<T> contentClass){
-        return mapper.convertValue(obj, contentClass);
-    }
-
-
+  public <T> T objectMapper(Object obj, Class<T> contentClass) {
+    return mapper.convertValue(obj, contentClass);
+  }
 }

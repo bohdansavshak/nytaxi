@@ -1,11 +1,10 @@
 package com.bohdansavshak.model;
 
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -13,46 +12,47 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class TaxiTrip {
 
-    Long id;
+  Long id;
 
-    private String tpepPickupDatetime;
+  private String tpepPickupDatetime;
 
-    private String tpepDropoffDatetime;
+  private String tpepDropoffDatetime;
 
-    private String dropOffDay;
+  private Integer dropOffDay;
 
-    private String dropOffMonth;
+  private Integer dropOffMonth;
 
-    private Integer passengerCount;
+  private Integer dropOffYear;
 
-    private BigDecimal tripDistance;
+  private Integer passengerCount;
 
-    private Integer puLocationId;
+  private BigDecimal tripDistance;
 
-    private Integer doLocationId;
+  private Integer puLocationId;
 
-    private Boolean storeAndFwdFlag;
+  private Integer doLocationId;
 
-    private BigDecimal fareAmount;
+  private Boolean storeAndFwdFlag;
 
-    private BigDecimal extra;
+  private BigDecimal fareAmount;
 
-    private BigDecimal mtaTax;
+  private BigDecimal extra;
 
-    private BigDecimal improvementSurcharge;
+  private BigDecimal mtaTax;
 
-    private BigDecimal tipAmount;
+  private BigDecimal improvementSurcharge;
 
-    private BigDecimal tollsAmount;
+  private BigDecimal tipAmount;
 
-    private BigDecimal totalAmount;
+  private BigDecimal tollsAmount;
 
-    // relations
+  private BigDecimal totalAmount;
 
-    private Long vendorId;
+  // relations
 
-    private Long rateCodeId;
+  private Long vendorId;
 
-    private Long paymentTypeId;
+  private Long rateCodeId;
 
+  private Long paymentTypeId;
 }
