@@ -21,8 +21,6 @@ public class KafkaConfiguration {
 
   @Bean
   KafkaTemplate<Object, Object> kafkaTemplate(ProducerFactory<Object, Object> producerFactory) {
-    return new KafkaTemplate<>(
-        producerFactory,
-        Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class));
+    return new KafkaTemplate<>(producerFactory, Map.of(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class));
   }
 }

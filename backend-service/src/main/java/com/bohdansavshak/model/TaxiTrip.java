@@ -1,6 +1,9 @@
 package com.bohdansavshak.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +18,9 @@ import org.springframework.data.relational.core.mapping.Table;
 @AllArgsConstructor
 @Table("taxi_trip")
 public class TaxiTrip {
+
+  private static final DateTimeFormatter DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a");
 
   @Id
   @Column("taxi_trip_id")
@@ -81,4 +87,11 @@ public class TaxiTrip {
 
   @Column("payment_type_id")
   private Long paymentTypeId;
+
+  public void setDropOffDayMonthYear() {
+    LocalDateTime dateTime = LocalDateTime.parse(this.tpepDropoffDatetime, DATE_TIME_FORMATTER);
+    this.dropOffDay = dateTime.getDayOfMonth();
+    this.dropOffMonth = dateTime.getMonthValue();
+    this.dropOffYear = dateTime.getYear();
+  }
 }

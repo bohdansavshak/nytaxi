@@ -1,7 +1,7 @@
 package com.bohdansavshak.rest;
 
 import com.bohdansavshak.repository.redis.RedisTotalsCalculatedPerDayRepository;
-import com.bohdansavshak.repository.redis.entity.RedisTotalsCalculatedPerDay;
+import com.bohdansavshak.repository.redis.entity.RedisTotalPerDay;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,13 +15,13 @@ public class TotalsController {
   private final RedisTotalsCalculatedPerDayRepository redisTotalsCalculatedPerDayRepository;
 
   @GetMapping("/totals-per-day")
-  public Iterable<RedisTotalsCalculatedPerDay> getTotalsCalculatedPerDay() {
+  public Iterable<RedisTotalPerDay> getTotalsCalculatedPerDay() {
     return redisTotalsCalculatedPerDayRepository.findAll();
   }
 
   @PostMapping("/totals-per-day")
-  public RedisTotalsCalculatedPerDay postTotalsPerDay(
-      @RequestBody RedisTotalsCalculatedPerDay totalsPerDay) {
+  public RedisTotalPerDay postTotalsPerDay(
+      @RequestBody RedisTotalPerDay totalsPerDay) {
     return redisTotalsCalculatedPerDayRepository.save(totalsPerDay);
   }
 }
