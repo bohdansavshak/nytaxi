@@ -1,16 +1,15 @@
-package com.bohdansavshak.repository.redis.entity;
+package com.bohdansavshak.model;
 
+import com.bohdansavshak.repository.db.DbTotalRepository.TotalResult;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import com.bohdansavshak.repository.db.DbTotalRepository;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 @Data
-@RedisHash
+@RedisHash("RedisTotalPerDay")
 public class RedisTotalPerDay implements Serializable {
 
   @Id private LocalDate date;
@@ -18,7 +17,7 @@ public class RedisTotalPerDay implements Serializable {
 
   public RedisTotalPerDay() {}
 
-  public RedisTotalPerDay(DbTotalRepository.TotalResult totalPerDay) {
+  public RedisTotalPerDay(TotalResult totalPerDay) {
     this.date = totalPerDay.getLocalDate();
     this.total = totalPerDay.getTotal();
   }

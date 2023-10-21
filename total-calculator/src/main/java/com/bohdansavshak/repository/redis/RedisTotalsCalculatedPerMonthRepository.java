@@ -1,6 +1,6 @@
 package com.bohdansavshak.repository.redis;
 
-import com.bohdansavshak.repository.redis.entity.RedisTotalPerMonth;
+import com.bohdansavshak.model.RedisTotalPerMonth;
 import java.time.LocalDate;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;

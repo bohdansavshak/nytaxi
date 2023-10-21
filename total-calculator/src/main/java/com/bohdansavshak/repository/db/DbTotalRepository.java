@@ -1,7 +1,6 @@
 package com.bohdansavshak.repository.db;
 
 import com.bohdansavshak.model.TaxiTrip;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -23,7 +22,7 @@ public interface DbTotalRepository extends CrudRepository<TaxiTrip, Long> {
                          dropoff_day
                 """,
       nativeQuery = true)
-  List<DbTotalPerDay> getTotalPerDay();
+  List<TotalPerDay> getTotalsPerDay();
 
   @Query(
       value =
@@ -36,9 +35,9 @@ public interface DbTotalRepository extends CrudRepository<TaxiTrip, Long> {
                          dropoff_month
                 """,
       nativeQuery = true)
-  List<DbTotalPerMonth> getTotalPerMonth();
+  List<TotalPerMonth> getTotalsPerMonth();
 
-  interface DbTotalPerDay extends TotalResult {
+  interface TotalPerDay extends TotalResult {
     Integer getYear();
 
     Integer getMonth();
@@ -53,7 +52,7 @@ public interface DbTotalRepository extends CrudRepository<TaxiTrip, Long> {
     }
   }
 
-  interface DbTotalPerMonth extends TotalResult {
+  interface TotalPerMonth extends TotalResult {
 
     int FIRST_DAY_OF_MONTH = 1;
 
