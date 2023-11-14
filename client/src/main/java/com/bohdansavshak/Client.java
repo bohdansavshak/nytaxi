@@ -3,40 +3,72 @@ package com.bohdansavshak;
 import com.bohdansavshak.model.TaxiTrip;
 import java.io.*;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-public class Client {
+@SpringBootApplication
+@AllArgsConstructor
+@Slf4j
+public class Client implements CommandLineRunner {
 
   private static final int CHUNK_SIZE = 10 * 1024 * 1024; // 100 MB
 
-  public static void main(String[] args) throws InterruptedException {
-    WebClient webClient =
-        WebClient.builder()
-            .baseUrl("http://localhost:8080/api/v1/")
-            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .build();
+  private final WebClient webClient;
 
+  public static void main(String[] args) {
+    SpringApplication.run(Client.class, args);
+  }
+
+  @Override
+  public void run(String... args) {
     List<TaxiTrip> taxiTrips = readTaxiTripFromCsv();
+    log.info("Start sending taxi trips to frontend");
+    log.info("taxiTrips.size: {}", taxiTrips.size());
 
-    // Process the response
-    Flux.fromIterable(taxiTrips)
-        .flatMap(
-            taxiTrip ->
-                webClient
-                    .post()
-                    .uri("/message")
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .body(BodyInserters.fromValue(taxiTrip))
-                    .retrieve()
-                    .bodyToMono(TaxiTrip.class))
-        .subscribe(System.out::println);
-    Thread.sleep(50000);
+    long start = System.currentTimeMillis();
+    List<Long> executionTime = Flux.fromIterable(taxiTrips)
+            .buffer(100)
+            .delayElements(Duration.ofSeconds(1))
+            .flatMapIterable(e -> e)
+            .flatMap(this::sendRequest)
+            .take(2000)
+            .collectList()
+            .block();
+
+    List<Long> sortedExecutionTime = executionTime.stream().sorted().toList();
+    log.info("99 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.99)));
+    log.info("95 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.95)));
+    log.info("90 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.9)));
+
+    log.info("Took: {}", System.currentTimeMillis() - start);
+
+    log.info("Finished");
+    System.exit(0);
+  }
+
+  private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
+    var s = System.currentTimeMillis();
+    return webClient
+        .post()
+        .uri("/api/v1/message")
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .body(BodyInserters.fromValue(taxiTrip))
+        .retrieve()
+        .bodyToMono(TaxiTrip.class)
+        .map(e -> (System.currentTimeMillis() - s));
   }
 
   private static void splitLargeCsv() {
