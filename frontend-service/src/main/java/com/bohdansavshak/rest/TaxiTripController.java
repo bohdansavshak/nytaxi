@@ -1,27 +1,26 @@
 package com.bohdansavshak.rest;
 
-import com.bohdansavshak.model.TaxiTrip;
+import static org.springframework.http.ResponseEntity.ok;
+
 import com.bohdansavshak.kafka.producer.KafkaProducer;
 import com.bohdansavshak.kafka.producer.KafkaProducer.Response;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
+import com.bohdansavshak.model.TaxiTrip;
 import com.bohdansavshak.respository.RedisRepository;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-
-import static org.springframework.http.ResponseEntity.ok;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(path = "/api/v1")
 public class TaxiTripController {
 
-  public static final int FIRST_DAY_OF_MONTH = 1;
   private final KafkaProducer kafka;
   private final RedisRepository repository;
 
@@ -38,12 +37,19 @@ public class TaxiTripController {
 
     if (day != null) {
       LocalDate date = LocalDate.of(year, month, day);
-      return repository.getTotalPerDay(date).map(total -> ok(new TotalResponse(total, date, null)));
+      return repository.getTotalPerDay(date).map(total -> ok(new TotalResponse(total, date)));
     } else {
-      LocalDate date = LocalDate.of(year, month, FIRST_DAY_OF_MONTH);
-      return repository.getTotalPerMonth(date).map(total -> ok(new TotalResponse(total, date, null)));
+      LocalDate date = YearMonth.of(year, month).atEndOfMonth();
+      return repository.getTotalPerMonth(date).map(total -> ok(new TotalResponse(total, date)));
     }
   }
 
-  record TotalResponse(BigDecimal total, LocalDate date, String errorMessage) {}
+  record TotalResponse(BigDecimal total, LocalDate date) {
+    TotalResponse {
+      if (total == null || total.compareTo(BigDecimal.ZERO) < 0) {
+        throw new InvalidTotalResponseException("Total is null or less than zero for: " + date);
+      }
+      total = total.setScale(2, RoundingMode.HALF_UP);
+    }
+  }
 }

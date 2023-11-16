@@ -3,6 +3,7 @@ package com.bohdansavshak.repository.db;
 import com.bohdansavshak.model.TaxiTrip;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -54,8 +55,6 @@ public interface DbTotalRepository extends CrudRepository<TaxiTrip, Long> {
 
   interface TotalPerMonth extends TotalResult {
 
-    int FIRST_DAY_OF_MONTH = 1;
-
     Integer getYear();
 
     Integer getMonth();
@@ -64,7 +63,7 @@ public interface DbTotalRepository extends CrudRepository<TaxiTrip, Long> {
 
     @Override
     default LocalDate getLocalDate() {
-      return LocalDate.of(getYear(), getMonth(), FIRST_DAY_OF_MONTH);
+      return YearMonth.of(getYear(), getMonth()).atEndOfMonth();
     }
   }
 
