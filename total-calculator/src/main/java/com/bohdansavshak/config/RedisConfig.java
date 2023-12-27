@@ -1,9 +1,12 @@
 package com.bohdansavshak.config;
 
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.convert.RedisCustomConversions;
@@ -15,9 +18,16 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableRedisRepositories
 public class RedisConfig {
 
+  @Value("${spring.data.redis.host}")
+  private String redisHost;
+
+  @Value("${spring.data.redis.port}")
+  private int redisPort;
+
   @Bean
-  RedisConnectionFactory connectionFactory() {
-    return new LettuceConnectionFactory();
+  public RedisConnectionFactory redisConnectionFactory() {
+    RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(redisHost, redisPort);
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
 
   @Bean

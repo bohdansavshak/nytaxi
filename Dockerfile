@@ -11,7 +11,7 @@ COPY total-calculator/build/libs/total-calculator-0.0.1-SNAPSHOT.jar     /app/to
 WORKDIR /app
 
 # Use an environment variable for the jar filename
-ENV APP=backend
+ENV APP=frontend
 
 # Add an entrypoint script
 ENTRYPOINT java -jar $APP.jar

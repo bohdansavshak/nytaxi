@@ -73,7 +73,7 @@ public class Client implements CommandLineRunner {
 
   private static void splitLargeCsv() {
     String inputFilePath =
-        "C:\\Users\\bohda\\IdeaProjects\\yellow_taxi_trip_data\\2018_Yellow_Taxi_Trip_Data.csv";
+        "C:\\Users\\bohda\\OneDrive\\Documents\\IdeaProjects\\yellow_taxi_trip_data\\2018_Yellow_Taxi_Trip_Data.csv";
     String outputFolderPath = "C:\\Users\\bohda\\IdeaProjects\\yellow_taxi_trip\\split";
 
     try {
@@ -121,7 +121,7 @@ public class Client implements CommandLineRunner {
   }
 
   public static List<TaxiTrip> readTaxiTripFromCsv() {
-    String filePath = "C:\\Users\\bohda\\IdeaProjects\\yellow_taxi_trip\\split\\chunk_2.csv";
+    String filePath = "C:\\Users\\bohda\\OneDrive\\Documents\\IdeaProjects\\yellow_taxi_trip\\split\\chunk_2.csv";
 
     try {
       return readCsvFile(filePath);

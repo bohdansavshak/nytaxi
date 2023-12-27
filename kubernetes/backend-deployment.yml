@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-service
+  namespace: bohdansavshak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-service
+  template:
+    metadata:
+      labels:
+        app: backend-service
+    spec:
+      containers:
+        - name: backend-service
+          image: lari245/first-promotion-image:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: APP
+              value: backend
+      imagePullSecrets:
+        - name: promotion
