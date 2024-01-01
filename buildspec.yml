@@ -1,10 +1,11 @@
 version: 0.2
 phases:
-  runtime-versions:
-    java: corretto21
+  install:
+    runtime-versions:
+      java: corretto21
     commands:
-      - chmod +x ./gradlew
-      - echo "Install Phase - if you need additional package, add it in this stage"
+        - chmod +x ./gradlew
+        - echo "Install Phase - if you need additional package, add it in this stage"
   pre_build:
       commands:
         # This Docker Image tag will have date, time and Codecommit version
