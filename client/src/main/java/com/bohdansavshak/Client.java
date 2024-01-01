@@ -60,6 +60,7 @@ public class Client implements CommandLineRunner {
   }
 
   private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
+    log.info("taxiTrip: {}", taxiTrip);
     var s = System.currentTimeMillis();
     return webClient
         .post()

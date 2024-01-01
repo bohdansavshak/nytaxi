@@ -21,7 +21,7 @@ public class WebClientConfig {
 
     var webClient = WebClient.builder()
             .filter(oauth2Client)
-            .baseUrl("http://localhost:51035/")
+            .baseUrl("https://promotion.bohdansavshak.com/")
             .build();
 
     log.info("Sending dummy request to frontend to warm access_token behind the scene");
