@@ -1,13 +1,18 @@
 version: 0.2
 phases:
   install:
-    runtime-versions:
-      java: corretto21
     commands:
         - chmod +x ./gradlew
         - echo "Install Phase - if you need additional package, add it in this stage"
   pre_build:
       commands:
+        - echo "Installing Amazon Corretto 21..."
+        - wget --no-verbose -O corretto-21.0.1.12.1.tar.gz https://corretto.aws/downloads/resources/21.0.1.12.1/amazon-corretto-21.0.1.12.1-linux-x64.tar.gz
+        - mkdir -p /tmp/corretto21
+        - tar -zxf corretto-21.0.1.12.1.tar.gz -C /tmp/corretto21
+        - export PATH=/tmp/corretto21/amazon-corretto-21.0.1.12.1-linux-x64/bin:$PATH
+        - export JAVA_HOME=/tmp/corretto21/amazon-corretto-21.0.1.12.1-linux-x64
+        - java -version
         # This Docker Image tag will have date, time and Codecommit version
         - TAG="$(date +%Y-%m-%d.%H.%M.%S).$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
         # Updating Docker Image tag in your Kubernetes Deployment Manifest
