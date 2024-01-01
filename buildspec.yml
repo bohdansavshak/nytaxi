@@ -1,6 +1,8 @@
 version: 0.2
 phases:
   install:
+    runtime-versions:
+      java: 21
     commands:
       - echo "Install Phase - if you need additional package, add it in this stage"
   pre_build:
