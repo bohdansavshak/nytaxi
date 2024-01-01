@@ -14,20 +14,20 @@ try {
     kubectl create secret docker-registry promotion --docker-server=https://index.docker.io/v1/ --docker-username=$env:DOCKER_USERNAME --docker-password=$env:DOCKER_PASSWORD --docker-email=$env:DOCKER_EMAIL --namespace=bohdansavshak
 
     #create configmap with
-    Write-Output "Creating ConfigMap..."
-    kubectl create configmap postgres-config --from-file=create-schema-init.sql --namespace bohdansavshak
+#    Write-Output "Creating ConfigMap..."
+#    kubectl create configmap postgres-config --from-file=create-schema-init.sql --namespace bohdansavshak
 
     # create secret with password for postgres
-    Write-Output "Creating Secret..."
-    kubectl create secret generic postgres-secret --from-literal=postgresql-password=mysecretpassword --namespace bohdansavshak
+#    Write-Output "Creating Secret..."
+#    kubectl create secret generic postgres-secret --from-literal=postgresql-password=mysecretpassword --namespace bohdansavshak
 
     # create postgres
-    Write-Output "Applying StatefulSet..."
-    kubectl apply -f .\postgres-statefulset.yml
+#    Write-Output "Applying StatefulSet..."
+#    kubectl apply -f .\postgres-statefulset.yml
 
     # create redis
-    Write-Output "Applying backend deployment..."
-    kubectl apply -f .\redis-statefulset.yml
+#    Write-Output "Applying backend deployment..."
+#    kubectl apply -f .\redis-statefulset.yml
 
     # Apply the backend deployment
     Write-Output "Applying backend deployment..."
