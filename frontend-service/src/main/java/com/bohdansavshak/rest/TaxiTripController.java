@@ -44,6 +44,11 @@ public class TaxiTripController {
     }
   }
 
+  @GetMapping(path = "/test-code-pipeline-is-working")
+  public String hello() {
+    return "helloworld";
+  }
+
   record TotalResponse(BigDecimal total, LocalDate date) {
     TotalResponse {
       if (total == null || total.compareTo(BigDecimal.ZERO) < 0) {
