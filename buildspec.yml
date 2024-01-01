@@ -1,6 +1,7 @@
 version: 0.2
 phases:
-  install:
+  runtime-versions:
+    java: corretto21
     commands:
       - chmod +x ./gradlew
       - echo "Install Phase - if you need additional package, add it in this stage"
