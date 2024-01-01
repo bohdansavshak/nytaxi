@@ -15,6 +15,6 @@ iam:
         - arn:aws:iam::467576817753:policy/AWSLoadBalancerControllerIAMPolicy
 managedNodeGroups:
   - name: main-ng
-    instanceType: m5.large
+    instanceType: t4g.small
     desiredCapacity: 2
     privateNetworking: true

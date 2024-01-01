@@ -1,1 +1,1 @@
-CREATE DATABASE username_nytaxi;
+CREATE DATABASE bohdansavshak_nytaxi;
