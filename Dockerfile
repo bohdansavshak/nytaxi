@@ -1,5 +1,5 @@
 # Use JDK environment for our Docker image
-FROM amazoncorretto:21-alpine
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:21
 
 # Copy each jar file from respective module into the image
 COPY backend-service/build/libs/backend-service-0.0.1-SNAPSHOT.jar       /app/backend.jar
