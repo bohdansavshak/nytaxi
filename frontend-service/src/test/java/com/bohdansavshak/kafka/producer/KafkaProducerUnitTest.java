@@ -39,7 +39,7 @@ public class KafkaProducerUnitTest {
         Mono<ResponseEntity<KafkaProducer.Response>> sendResponseMono = producer.send(taxiTrip);
 
         StepVerifier.create(sendResponseMono)
-                    .expectNext(ResponseEntity.ok().body(new KafkaProducer.Response("Message received1")))
+                    .expectNext(ResponseEntity.ok().body(new KafkaProducer.Response("Message received")))
                     .verifyComplete();
     }
 
