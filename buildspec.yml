@@ -27,9 +27,9 @@ phases:
         # Update Kube config Home Directory
         - export KUBECONFIG=$HOME/.kube/config
   build:
+    on-failure: ABORT
     commands:
       # Building Docker Image
-      - set -e  # Exit immediately if a command exits with a non-zero status
       - echo "Building java project with Gradle"
       - ./gradlew clean build
       - echo "Docker build started on `date`"
@@ -37,7 +37,6 @@ phases:
       - docker build --tag $REPOSITORY_URL:$TAG .
   post_build:
     commands:
-      - set -e
       # Push Docker Image to ECR Repository
       - echo "Docker build completed on `date`"
       - echo "Pushing the Docker image to ECR Repository"
