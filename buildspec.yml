@@ -30,7 +30,8 @@ phases:
     commands:
       # Building Docker Image
       - echo "Building java project with Gradle"
-      - ./gradlew clean build
+      - command: ./gradlew clean build
+        exitCode: onFailure
       - echo "Docker build started on `date`"
       - echo "Building the Docker image..."
       - docker build --tag $REPOSITORY_URL:$TAG .
