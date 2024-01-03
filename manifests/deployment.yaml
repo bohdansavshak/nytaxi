@@ -5,7 +5,7 @@ metadata:
   name: backend-service
   namespace: bohdansavshak
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: backend-service
@@ -52,7 +52,7 @@ metadata:
   labels:
     app: frontend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: frontend
