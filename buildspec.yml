@@ -17,7 +17,7 @@ phases:
         - TAG="$(date +%Y-%m-%d.%H.%M.%S).$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
         # Updating Docker Image tag in your Kubernetes Deployment Manifest
         - echo "Update Image tag in kubernetes manifest"
-        - sed -i 's\aml
+        - sed -i 's@CONTAINER_IMAGE@'"$REPOSITORY_URL:$TAG"'@' manifests/deployment.yaml
         # Check AWS CLI Version
         - echo "Checking AWS CLI Version..."
         - aws --version
