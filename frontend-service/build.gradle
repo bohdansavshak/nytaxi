@@ -1,5 +1,6 @@
-group 'com.bohdansavshak'
-version '0.0.1-SNAPSHOT'
+plugins {
+    id 'promotion.root-dependencies'
+}
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
