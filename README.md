@@ -27,43 +27,114 @@ You can use this OpenAPI Specification to generate client libraries, server stub
 ## Prerequisites
 
 1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
-2. Install [Minikube](https://minikube.sigs.k8s.io/docs/start/)
-
-## Steps to Follow
-
-1. Start Minikube:
-
+2. Run the following command to see which port is exposed for minikube
     ```
-    minikube start
+     docker-compose -f .\config-files\docker-compose-for-local-development\docker-compose.yml up -d
     ```
+3. gradlew clean build
+4. java -jar path/to/jar/jarfile.jar
 
-2. Install Kafka. Follow the quickstart guide here: [https://strimzi.io/quickstarts/](https://strimzi.io/quickstarts/)
-   ```
-   kubectl create namespace kafka
-   kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
-   kubectl apply -f https://strimzi.io/examples/latest/kafka/kafka-persistent-single.yaml -n kafka 
-   
-   kubectl -n kafka delete $(kubectl get strimzi -o name -n kafka)
-   kubectl -n kafka delete -f 'https://strimzi.io/install/latest?namespace=kafka'
-   ```
+# How to Deploy application to AWS
+
+## Prerequisites
+1. Install aws cli, kubectl, eksctl, helm 
+
+### Create policy for aws load balancer controller for ingress
+2. curl -o iam-policy.json https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.7/docs/install/iam_policy.json
+3. aws iam create-policy \
+   --policy-name AWSLoadBalancerControllerIAMPolicy \
+   --policy-document iam-policy.json
+### Update config-cluster.yaml file and create cluster. 
+4. eksctl create cluster -f \kubernetes\config-cluster.yaml
+[config-cluster.yaml](deployment-scripts%2Fconfig-cluster.yaml)
+### Install aws load balancer controller
+4. helm repo add eks https://aws.github.io/eks-charts
+5. helm repo update eks
+6. kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
+7. helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+   -n kube-system \
+   --set clusterName=promotion-cluster \
+   --set serviceAccount.create=false \
+   --set serviceAccount.name=aws-load-balancer-controller
+### Install storage class driver for ebs
+8. eksctl utils associate-iam-oidc-provider --region=us-east-1 --cluster=promotion-cluster --approve
+9. eksctl create iamserviceaccount --region us-east-1 --name ebs-csi-controller-sa --namespace kube-system --cluster promotion-cluster --attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy  --approve --role-only --role-name AmazonEKS_EBS_CSI_DriverRole
+10. eksctl create addon --name aws-ebs-csi-driver --cluster promotion-cluster --service-account-role-arn arn:aws:iam::$(aws sts get-caller-identity --query Account --output text):role/AmazonEKS_EBS_CSI_DriverRole --force
+### Install kafka 
+11. kubectl create namespace kafka
+12. kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
+13. kubectl apply -f .\deployment-scripts\kafka.yaml -n kafka
+    [kafka.yaml](deployment-scripts%2Fkafka.yaml)
+### Create managed DB
+14. Create security group in eks cluster vpc. Group should allow postgress 5432 inbound from cluster security group. This would mean that db would only accept connections from within eks cluster and it wouldn't be publicly accessible.
+15. Create db in aws management console (UI) only after you create eks cluster.
+16. Choose vpc of eks cluster so db and eks would be in the same vpc 
+17. Choose security group that you created earlier when creating managed db. 
+18. Here is [psql-client.yaml](deployment-scripts%2Fpsql-client.yaml) file. Create pod to connect to db to create database. 
+19. kubectl apply -f .\psql-client.yaml
+20. kubectl exec -it psql-client -- /bin/sh
+21. psql -h database-1.crc2seeos3gf.us-east-1.rds.amazonaws.com -U postgres
+22.  CREATE DATABASE bohdansavshak_nytaxi;
+23. kubectl delete -f .\psql-client.yaml
+### Create Redis 
+24. kubectl create namespace bohdansavshak
+25. kubectl config set-context --current --namespace=bohdansavshak
+26. kubectl apply -f .\redis-statefulset.yaml 
+[redis-statefulset.yml](deployment-scripts%2Fredis-statefulset.yml)
 
 
-3. Create env variables with credentials for docker hub. 
-  ``` 
-   DOCKER_USERNAME
-   DOCKER_PASSWORD
-   DOCKER_EMAIL
-  ```
+# CI/CD configuration
+![img.png](config-files/img.png)
+### Create ECR and CodeBuildEKSRole
+1. aws ecr create-repository --repository-name promotion --image-tag-mutability IMMUTABLE --image-scanning-configuration scanOnPush=true
+2. aws sts get-caller-identity --query Account --output text
+3. export ACCOUNT_ID=<aws account id>
+4. TRUST="{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Effect\": \"Allow\", \"Principal\": { \"AWS\": \"arn:aws:iam::${ACCOUNT_ID}:root\" }, \"Action\": \"sts:AssumeRole\" } ] }"
+5. aws iam create-role --role-name CodeBuildEKSRole --assume-role-policy-document "$TRUST" --output text --query 'Role.Arn'
+6. echo '{ "Version": "2012-10-17", "Statement": [ { "Effect": "Allow", "Action": "eks:Describe*", "Resource": "*" } ] }' > eksdescribe.json
+7. aws iam put-role-policy --role-name CodeBuildEKSRole --policy-name eks-describe-policy --policy-document file://eksdescribe.json
+### Patch the aws-auth configmap with new role
+8. kubectl get configmap aws-auth -o yaml -n kube-system
+9. export ACCOUNT_ID=<aws account id>
+10. ROLE=" - rolearn: arn:aws:iam::$ACCOUNT_ID:role/CodeBuildEKSRole\n username: build\n groups:\n - system:masters
+11. kubectl get -n kube-system configmap/aws-auth -o yaml | awk "/mapRoles: \|/{print;print \"$ROLE\";next}1" > /tmp/auth-patch.yml
+12. kubectl patch configmap/aws-auth -n kube-system --patch "$(cat auth-patch.yml)"
+13. In order for this buildspec to work you need to add some environment variable
+### Manual creation of CodePipeline
+14. Create CodePipeline
+15. Select CodeCommit as Source provider
+16. Under the build stage, choose AWS CodeBuild as the build provider, and under the Project name, click on Create project.
+    Before moving to the next step, you need to create next environment variables
+    EKS_CLUSTERNAME=<your eks cluster name>
+    EKS_ROLE_ARN=<ARN of CodeBuildEKSRole>
+    REPOSITORY_URL=<ECR repository>
+17. Under the deploy stage, click on Skip deploy stage. As deploy doesn’t support EKS.
+18. Go to the IAM console, Policies, and click on Create policy.
 
-4. Create the necessary Kubernetes resources:
-    ```
-    .\create-resources-in-kubernetes.ps1
-    ```
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Sid": "VisualEditor0",
+"Effect": "Allow",
+"Action": "sts:AssumeRole",
+"Resource": "arn:aws:iam::XXXXXXX:role/CodeBuildEKSRole"
+}
+]
+}
 
-4. Run the following command to see which port is exposed for minikube
-    ```
-    docker port minikube
-    ```
+19. Go back to the IAM role "codebuild-promotion-service-role", click on attach and attach the policy that you just created.
+20. Also, this role doesn’t have permission to push newly created docker images to the EC2 repo, so attach one more policy. AmazonEC2ContainerRegistryFullAccess
+
+### DNS and HTTPS. Create certificate in ACM
+28. aws acm request-certificate --domain-name promotion.bohdansavshak.com --validation-method DNS
+29. aws acm describe-certificate --certificate-arn arn:aws:acm:us-east-1:467576817753:certificate/962f9f71-b56f-4d91-8f5d-6e1fd66fa9a1
+30. to get cname record details that you need to create in DNS.
+31. Update DNS records to validate certificate.
+32. Find the load balancer dns and create record for it in DNS.
+### To delete eks cluser with all resources.
+33. eksctl delete cluster promotion-cluster
+
 
 # Why buildSrc
 https://docs.gradle.org/current/userguide/sharing_build_logic_between_subprojects.html
