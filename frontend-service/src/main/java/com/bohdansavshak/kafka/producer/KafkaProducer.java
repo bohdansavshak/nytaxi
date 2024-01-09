@@ -22,6 +22,7 @@ public class KafkaProducer {
     log.info("taxi trip: {}", taxiTrip);
     Mono<SendResult<Object, Object>> sendResultMono =
         Mono.fromFuture(template.send(TAXI_TRIPS_TOPIC, taxiTrip));
+    log.info("Test if Mono.fromFuture is blocking");
 
     return sendResultMono
         .map(

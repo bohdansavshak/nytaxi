@@ -52,6 +52,7 @@ public class Client implements CommandLineRunner {
     log.info("99 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.99)));
     log.info("95 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.95)));
     log.info("90 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.9)));
+    log.info("50 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.5)));
 
     log.info("Took: {}", System.currentTimeMillis() - start);
 

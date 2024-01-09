@@ -136,14 +136,10 @@ You can use this OpenAPI Specification to generate client libraries, server stub
 33. eksctl delete cluster promotion-cluster
 
 
-# Why buildSrc
-https://docs.gradle.org/current/userguide/sharing_build_logic_between_subprojects.html
-Instead of using build.gradle in root project with subproject{} or allprojects it's better to use buildSrc (convention plugins) 
-All shared dependencies for all modules are defined in root-dependencies.build file. 
+# Project Structure
 
-https://docs.gradle.org/current/userguide/multi_project_builds.html
-https://docs.gradle.org/current/samples/sample_building_java_applications_multi_project.html#review_the_project_files
+I use `buildSrc` for sharing build logic across subprojects. All dependencies for all modules are in `root-dependencies.build` file. More details:
 
-
-
-
+- [Sharing Build Logic](https://docs.gradle.org/current/userguide/sharing_build_logic_between_subprojects.html)
+- [Multi-Project Builds](https://docs.gradle.org/current/userguide/multi_project_builds.html)
+- [Java Multi-Project Sample](https://docs.gradle.org/current/samples/sample_building_java_applications_multi_project.html#review_the_project_files)
