@@ -39,7 +39,7 @@ I use `buildSrc` for sharing build logic across subprojects. All dependencies fo
      docker-compose -f .\config-files\docker-compose-for-local-development\docker-compose.yml up -d
     ```
 3. gradlew clean build
-4. java -jar path/to/jar/jarfile.jar
+4. Start applications with 'local' profile
 
 # How to Deploy application to AWS
 

@@ -1,6 +1,7 @@
 package com.bohdansavshak.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.*;
@@ -13,6 +14,9 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class WebClientConfig {
 
+  @Value("${frontend-url}")
+  private String frontendUrl;
+
   @Bean
   WebClient webClient(ReactiveOAuth2AuthorizedClientManager authorizedClientManager) {
     ServerOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
@@ -21,7 +25,7 @@ public class WebClientConfig {
 
     var webClient = WebClient.builder()
             .filter(oauth2Client)
-            .baseUrl("https://promotion.bohdansavshak.com/")
+            .baseUrl(frontendUrl)
             .build();
 
     log.info("Sending dummy request to frontend to warm access_token behind the scene");
