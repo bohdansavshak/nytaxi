@@ -40,11 +40,11 @@ public class Client implements CommandLineRunner {
 
     long start = System.currentTimeMillis();
     List<Long> executionTime = Flux.fromIterable(taxiTrips)
+            .take(2000)
             .buffer(100)
             .delayElements(Duration.ofSeconds(1))
             .flatMapIterable(e -> e)
             .flatMap(this::sendRequest)
-            .take(2000)
             .collectList()
             .block();
 
