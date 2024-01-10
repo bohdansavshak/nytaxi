@@ -5,6 +5,7 @@ metadata:
   name: backend-service
   namespace: bohdansavshak
 spec:
+  revisionHistoryLimit: 5
   replicas: 2
   selector:
     matchLabels:
@@ -30,6 +31,8 @@ metadata:
   namespace: bohdansavshak
 spec:
   schedule: "* * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:
@@ -53,6 +56,7 @@ metadata:
     app: frontend
 spec:
   replicas: 2
+  revisionHistoryLimit: 5
   selector:
     matchLabels:
       app: frontend

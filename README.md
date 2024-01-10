@@ -70,7 +70,7 @@ I use `buildSrc` for sharing build logic across subprojects. All dependencies fo
 ### Install kafka 
 11. kubectl create namespace kafka
 12. kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
-13. kubectl apply -f .\deployment-scripts\kafka.yaml -n kafka
+13. kubectl apply -f .\kafka.yaml -n kafka
     [kafka.yaml](deployment-scripts%2Fkafka.yaml)
 ### Create managed DB
 14. Create security group in eks cluster vpc. Group should allow postgress 5432 inbound from cluster security group. This would mean that db would only accept connections from within eks cluster and it wouldn't be publicly accessible.
