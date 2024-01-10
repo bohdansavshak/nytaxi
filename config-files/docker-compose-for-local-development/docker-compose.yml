@@ -24,11 +24,10 @@ services:
 
   postgres:
     image: postgres
+    restart: always
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_DB: bohdansavshak_nytaxi
       POSTGRES_PASSWORD: mysecretpassword
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
 
