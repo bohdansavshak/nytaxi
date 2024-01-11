@@ -23,6 +23,9 @@ spec:
           env:
             - name: APP
               value: backend
+          envFrom:
+            - secretRef:
+                name: bohdansavshak-secret
 ---
 apiVersion: batch/v1
 kind: CronJob

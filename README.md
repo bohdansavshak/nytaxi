@@ -82,7 +82,7 @@ I use `buildSrc` for sharing build logic across subprojects. All dependencies fo
 20. kubectl exec -it psql-client -- /bin/sh
 21. psql -h database-1.crc2seeos3gf.us-east-1.rds.amazonaws.com -U postgres
 22.  CREATE DATABASE bohdansavshak_nytaxi;
-23. kubectl delete -f .\psql-client.yaml
+23. kubectl create secret generic bohdansavshak-secret --from-literal=DB_USERNAME=<db_username> --from-literal=DB_PASSWORD=<db_password> -n bohdansavshak
 ### Create Redis 
 24. kubectl create namespace bohdansavshak
 25. kubectl config set-context --current --namespace=bohdansavshak
