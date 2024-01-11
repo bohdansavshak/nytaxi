@@ -33,7 +33,7 @@ metadata:
   name: total-calculator-cron
   namespace: bohdansavshak
 spec:
-  schedule: "* * * * *"
+  schedule: "0 0 * * *"
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
