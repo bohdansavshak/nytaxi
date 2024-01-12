@@ -126,6 +126,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: client
+  namespace: bohdansavshak
 spec:
   template:
     spec:
@@ -135,6 +136,9 @@ spec:
           env:
             - name: APP
               value: client
+          envFrom:
+            - secretRef:
+                name: bohdansavshak-client-secret
           volumeMounts:
             - name: volume-with-sample-data
               mountPath: /data
@@ -148,6 +152,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sample-data-pvc
+  namespace: bohdansavshak
 spec:
   accessModes:
     - ReadWriteOnce
