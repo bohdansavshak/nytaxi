@@ -34,6 +34,49 @@ public class Client implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
+    String filePath = "/data/myfile.txt";
+
+    // Creating the file
+    try {
+      File file = new File(filePath);
+      if (file.createNewFile()) {
+        System.out.println("File created: " + file.getName());
+      } else {
+        System.out.println("File already exists.");
+      }
+    } catch (IOException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
+      return;
+    }
+
+    //Writing to the file
+    try {
+      PrintWriter writer = new PrintWriter(filePath, "UTF-8");
+      writer.println("This is a test.");
+      writer.println("Hello, world!");
+      writer.close();
+    } catch (IOException e) {
+      System.out.println("An error occurred while writing to the file.");
+      e.printStackTrace();
+      return;
+    }
+
+    // Reading from the file
+    try {
+      File file = new File(filePath);
+      BufferedReader br = new BufferedReader(new FileReader(file));
+      String line;
+      while ((line = br.readLine()) != null) {
+        System.out.println(line);
+      }
+      br.close();
+    } catch(IOException ex) {
+      System.out.println("Error: " + ex.getMessage());
+    }
+
+
+
     List<TaxiTrip> taxiTrips = readTaxiTripFromCsv();
     log.info("Start sending taxi trips to frontend");
     log.info("taxiTrips.size: {}", taxiTrips.size());

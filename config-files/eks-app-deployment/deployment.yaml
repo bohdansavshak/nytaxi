@@ -120,3 +120,37 @@ spec:
                 name: frontend-service-name
                 port:
                   number: 8080
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: client
+spec:
+  template:
+    spec:
+      containers:
+        - name: client
+          image: CONTAINER_IMAGE
+          env:
+            - name: APP
+              value: client
+          volumeMounts:
+            - name: volume-with-sample-data
+              mountPath: /data
+      volumes:
+        - name: volume-with-sample-data
+          persistentVolumeClaim:
+            claimName: sample-data-pvc
+      restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sample-data-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi

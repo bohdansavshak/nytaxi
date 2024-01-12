@@ -83,10 +83,11 @@ I use `buildSrc` for sharing build logic across subprojects. All dependencies fo
 21. psql -h database-1.crc2seeos3gf.us-east-1.rds.amazonaws.com -U postgres
 22.  CREATE DATABASE bohdansavshak_nytaxi;
 23. kubectl create secret generic bohdansavshak-secret --from-literal=DB_USERNAME=<db_username> --from-literal=DB_PASSWORD=<db_password> -n bohdansavshak
+24. kubectl create secret generic bohdansavshak-client-secret --from-literal=CLIENT_ID=<clientid> --from-literal=CLIENT_SECRET=<clientsecret> -n bohdansavshak
 ### Create Redis 
-24. kubectl create namespace bohdansavshak
-25. kubectl config set-context --current --namespace=bohdansavshak
-26. kubectl apply -f .\redis-statefulset.yaml 
+25. kubectl create namespace bohdansavshak
+26. kubectl config set-context --current --namespace=bohdansavshak 
+27. kubectl apply -f .\redis-statefulset.yaml 
 [redis-statefulset.yml](deployment-scripts%2Fredis-statefulset.yml)
 
 
