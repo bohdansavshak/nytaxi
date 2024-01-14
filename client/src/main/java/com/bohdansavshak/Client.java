@@ -30,8 +30,6 @@ import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
 @Slf4j
 public class Client implements CommandLineRunner {
 
-  private static final int CHUNK_SIZE = 10 * 1024 * 1024; // 100 MB
-
   private final WebClient webClient;
   private final S3TransferManager s3TransferManager;
 
@@ -139,7 +137,6 @@ public class Client implements CommandLineRunner {
   }
 
   private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
-    log.info("taxiTrip: {}", taxiTrip);
     var s = System.currentTimeMillis();
     return webClient
         .post()
