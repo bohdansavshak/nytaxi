@@ -3,8 +3,9 @@ plugins {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'software.amazon.awssdk:aws-sdk-java:2.23.2'
+    implementation 'software.amazon.awssdk:s3-transfer-manager:2.23.2'
+    implementation 'software.amazon.awssdk.crt:aws-crt:0.29.7'
 }

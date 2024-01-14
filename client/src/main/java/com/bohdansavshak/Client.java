@@ -3,12 +3,15 @@ package com.bohdansavshak;
 import com.bohdansavshak.model.TaxiTrip;
 import java.io.*;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,15 +21,36 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import software.amazon.awssdk.transfer.s3.S3TransferManager;
+import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryDownload;
+import software.amazon.awssdk.transfer.s3.model.DirectoryDownload;
+import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
 
 @SpringBootApplication
-@AllArgsConstructor
 @Slf4j
 public class Client implements CommandLineRunner {
 
   private static final int CHUNK_SIZE = 10 * 1024 * 1024; // 100 MB
 
   private final WebClient webClient;
+  private final S3TransferManager s3TransferManager;
+
+  @Value("${sample.data.path}")
+  private String sampleDataPath;
+
+  @Value("${first.half.of.the.year}")
+  private String firstHalfOfTheYearFile;
+
+  @Value("${second.half.of.the.year}")
+  private String secondHalfOfTheYearFile;
+
+  @Value("${s3.bucket.name}")
+  private String s3BucketName;
+
+  public Client(WebClient webClient, S3TransferManager s3TransferManager) {
+    this.webClient = webClient;
+    this.s3TransferManager = s3TransferManager;
+  }
 
   public static void main(String[] args) {
     SpringApplication.run(Client.class, args);
@@ -34,73 +58,83 @@ public class Client implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    String filePath = "/data/myfile.txt";
+    downloadOnlyNewFilesToSampleDataFolderFromS3();
 
-    // Creating the file
-    try {
-      File file = new File(filePath);
-      if (file.createNewFile()) {
-        System.out.println("File created: " + file.getName());
-      } else {
-        System.out.println("File already exists.");
-      }
-    } catch (IOException e) {
-      System.out.println("An error occurred.");
-      e.printStackTrace();
-      return;
-    }
+    List<TaxiTrip> firstHalfOfTheYearTaxiTrips =
+        readSampleFile(Paths.get(sampleDataPath, firstHalfOfTheYearFile));
+    List<TaxiTrip> secondHalfOfTheYearTaxiTripts =
+        readSampleFile(Paths.get(sampleDataPath, secondHalfOfTheYearFile));
 
-    //Writing to the file
-    try {
-      PrintWriter writer = new PrintWriter(filePath, "UTF-8");
-      writer.println("This is a test.");
-      writer.println("Hello, world!");
-      writer.close();
-    } catch (IOException e) {
-      System.out.println("An error occurred while writing to the file.");
-      e.printStackTrace();
-      return;
-    }
+    var start = System.currentTimeMillis();
+    var firstExecutionTime = sendWriteRequestsToFrontend(firstHalfOfTheYearTaxiTrips);
+    var secondExecutionTime = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
 
-    // Reading from the file
-    try {
-      File file = new File(filePath);
-      BufferedReader br = new BufferedReader(new FileReader(file));
-      String line;
-      while ((line = br.readLine()) != null) {
-        System.out.println(line);
-      }
-      br.close();
-    } catch(IOException ex) {
-      System.out.println("Error: " + ex.getMessage());
-    }
+    List<Long> executionTimes =
+        Stream.concat(firstExecutionTime.stream(), secondExecutionTime.stream()).toList();
 
+    logPercentiles(executionTimes, System.currentTimeMillis() - start);
 
+    log.info("Finished");
+    System.exit(0);
+  }
 
-    List<TaxiTrip> taxiTrips = readTaxiTripFromCsv();
-    log.info("Start sending taxi trips to frontend");
-    log.info("taxiTrips.size: {}", taxiTrips.size());
-
-    long start = System.currentTimeMillis();
-    List<Long> executionTime = Flux.fromIterable(taxiTrips)
-            .take(2000)
-            .buffer(100)
-            .delayElements(Duration.ofSeconds(1))
-            .flatMapIterable(e -> e)
-            .flatMap(this::sendRequest)
-            .collectList()
-            .block();
-
+  private static void logPercentiles(List<Long> executionTime, long timeItTook) {
     List<Long> sortedExecutionTime = executionTime.stream().sorted().toList();
     log.info("99 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.99)));
     log.info("95 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.95)));
     log.info("90 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.9)));
     log.info("50 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.5)));
+    log.info("Took: {}", timeItTook);
+  }
 
-    log.info("Took: {}", System.currentTimeMillis() - start);
+  private List<Long> sendWriteRequestsToFrontend(List<TaxiTrip> taxiTrips) {
+    log.info("Start sending taxi trips to frontend");
+    log.info("taxiTrips.size: {}", taxiTrips.size());
 
-    log.info("Finished");
-    System.exit(0);
+    List<Long> executionTime =
+        Flux.fromIterable(taxiTrips)
+            .buffer(500)
+            .delayElements(Duration.ofSeconds(1))
+            .flatMapIterable(e -> e)
+            .flatMap(this::sendRequest)
+            .collectList()
+            .block();
+    return executionTime;
+  }
+
+  private void downloadOnlyNewFilesToSampleDataFolderFromS3() {
+    Path sampleDataPath = Paths.get(this.sampleDataPath);
+    Set<String> existingFiles = getExistingFiles(sampleDataPath);
+
+    s3BucketName = "467576817753-bohdansavshak-nytaxi";
+    DirectoryDownload directoryDownload =
+        s3TransferManager.downloadDirectory(
+            DownloadDirectoryRequest.builder()
+                .destination(sampleDataPath)
+                .filter(key -> !existingFiles.contains(key.key()))
+                .bucket(s3BucketName)
+                .build());
+    CompletedDirectoryDownload completedDirectoryDownload =
+        directoryDownload.completionFuture().join();
+
+    completedDirectoryDownload
+        .failedTransfers()
+        .forEach(fail -> log.warn("Object [{}] failed to transfer", fail.toString()));
+    var failedTransferNumber = completedDirectoryDownload.failedTransfers().size();
+    log.info("Number of failed transfer number: {}", failedTransferNumber);
+  }
+
+  private static Set<String> getExistingFiles(Path directoryPath) {
+    Set<String> existingFiles = new HashSet<>();
+    try (Stream<Path> paths = Files.list(directoryPath)) {
+      paths
+          .filter(Files::isRegularFile)
+          .map(path -> path.getFileName().toString())
+          .forEach(existingFiles::add);
+    } catch (Exception e) {
+      System.err.println("Error listing files in directory: " + e.getMessage());
+    }
+    return existingFiles;
   }
 
   private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
@@ -116,58 +150,7 @@ public class Client implements CommandLineRunner {
         .map(e -> (System.currentTimeMillis() - s));
   }
 
-  private static void splitLargeCsv() {
-    String inputFilePath =
-        "C:\\Users\\bohda\\OneDrive\\Documents\\IdeaProjects\\yellow_taxi_trip_data\\2018_Yellow_Taxi_Trip_Data.csv";
-    String outputFolderPath = "C:\\Users\\bohda\\IdeaProjects\\yellow_taxi_trip\\split";
-
-    try {
-      splitCsvFile(inputFilePath, outputFolderPath);
-      System.out.println("CSV file split successfully!");
-    } catch (IOException e) {
-      System.err.println("An error occurred while splitting the CSV file: " + e.getMessage());
-    }
-  }
-
-  private static void splitCsvFile(String inputFilePath, String outputFolderPath)
-      throws IOException {
-    File inputFile = new File(inputFilePath);
-    File outputFolder = new File(outputFolderPath);
-    outputFolder.mkdirs();
-
-    try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
-      String header = reader.readLine();
-      String line;
-      int chunkNumber = 1;
-      long fileSize = inputFile.length();
-      long remainingSize = fileSize;
-      int bufferSize = 8 * 1024; // 8 KB
-      char[] buffer = new char[bufferSize];
-
-      while ((line = reader.readLine()) != null) {
-        File outputFile = new File(outputFolder, "chunk_" + chunkNumber + ".csv");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-          writer.write(header);
-          writer.newLine();
-
-          long chunkSize = 0;
-          while (line != null && (chunkSize + line.length() + 1) <= CHUNK_SIZE) {
-            writer.write(line);
-            writer.newLine();
-            chunkSize += line.length() + 1; // Add 1 for the new line character
-            line = reader.readLine();
-          }
-        }
-
-        remainingSize -= outputFile.length();
-        chunkNumber++;
-      }
-    }
-  }
-
-  public static List<TaxiTrip> readTaxiTripFromCsv() {
-    String filePath = "C:\\Users\\bohda\\OneDrive\\Documents\\IdeaProjects\\yellow_taxi_trip\\split\\chunk_2.csv";
-
+  public List<TaxiTrip> readSampleFile(Path filePath) {
     try {
       return readCsvFile(filePath);
     } catch (IOException e) {
@@ -176,10 +159,10 @@ public class Client implements CommandLineRunner {
     return null;
   }
 
-  private static List<TaxiTrip> readCsvFile(String filePath) throws IOException {
+  private List<TaxiTrip> readCsvFile(Path filePath) throws IOException {
     List<TaxiTrip> taxiTrips = new ArrayList<>();
 
-    try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+    try (BufferedReader reader = Files.newBufferedReader(filePath)) {
       String header = reader.readLine(); // Assuming the first line is the header
       String line;
 

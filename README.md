@@ -134,11 +134,19 @@ I use `buildSrc` for sharing build logic across subprojects. All dependencies fo
 19. Go back to the IAM role "codebuild-promotion-service-role", click on attach and attach the policy that you just created.
 20. Also, this role doesn’t have permission to push newly created docker images to the EC2 repo, so attach one more policy. AmazonEC2ContainerRegistryFullAccess
 
+# S3 for sample data. 
+1. kubectl apply -f .\aws-cli.yaml
+2. kubectl exec -it aws-cli -- aws sts get-caller-identity
+3. Attach this policy AmazonS3ReadOnlyAccess to role that you just checked.
+4. aws s3api create-bucket --bucket 467576817753-bohdansavshak-nytaxi --region us-east-1
+5. Prepare files in my case I prepared two files. first_half_of_the_2018_the_smallest_set.csv and second_half_of_the_2018_the_smallest_set.csv
+6. upload files to s3 by using command aws s3 cp /path/to/myfolder s3://467576817753-bohdansavshak-nytaxi --recursive.
+
 ### DNS and HTTPS. Create certificate in ACM
-28. aws acm request-certificate --domain-name promotion.bohdansavshak.com --validation-method DNS
-29. aws acm describe-certificate --certificate-arn arn:aws:acm:us-east-1:467576817753:certificate/962f9f71-b56f-4d91-8f5d-6e1fd66fa9a1
-30. to get cname record details that you need to create in DNS.
-31. Update DNS records to validate certificate.
-32. Find the load balancer dns and create record for it in DNS.
+1. aws acm request-certificate --domain-name promotion.bohdansavshak.com --validation-method DNS
+2. aws acm describe-certificate --certificate-arn arn:aws:acm:us-east-1:467576817753:certificate/962f9f71-b56f-4d91-8f5d-6e1fd66fa9a1
+3. to get cname record details that you need to create in DNS.
+4. Update DNS records to validate certificate.
+5. Find the load balancer dns and create record for it in DNS.
 ### To delete eks cluser with all resources.
-33. eksctl delete cluster promotion-cluster
+6. eksctl delete cluster promotion-cluster
