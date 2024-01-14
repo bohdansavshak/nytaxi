@@ -91,7 +91,7 @@ public class Client implements CommandLineRunner {
 
     List<Long> executionTime =
         Flux.fromIterable(taxiTrips)
-            .buffer(500)
+            .buffer(20)
             .delayElements(Duration.ofSeconds(1))
             .flatMapIterable(e -> e)
             .flatMap(this::sendRequest)
