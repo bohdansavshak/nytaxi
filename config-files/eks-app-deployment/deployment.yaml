@@ -145,13 +145,13 @@ spec:
       volumes:
         - name: volume-with-sample-data
           persistentVolumeClaim:
-            claimName: sample-data-pvc
+            claimName: sample-data
       restartPolicy: OnFailure
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: sample-data-pvc
+  name: sample-data
   namespace: bohdansavshak
 spec:
   accessModes:
