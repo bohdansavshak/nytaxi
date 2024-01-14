@@ -74,6 +74,7 @@ public class Client implements CommandLineRunner {
 
     logPercentiles(executionTimes, System.currentTimeMillis() - start);
 
+    log.info("In total send: {} requests", executionTimes.size());
     log.info("Finished");
     System.exit(0);
   }
