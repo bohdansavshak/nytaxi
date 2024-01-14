@@ -31,6 +31,7 @@ phases:
     commands:
       # Building Docker Image
       - echo "Building java project with Gradle"
+      - export GRADLE_OPTS="-Xmx1G -Xms1G"
       - ./gradlew build --info
       - echo "Docker build started on `date`"
       - echo "Building the Docker image..."
