@@ -31,7 +31,7 @@ phases:
     commands:
       # Building Docker Image
       - echo "Building java project with Gradle"
-      - ./gradlew clean build
+      - ./gradlew build
       - echo "Docker build started on `date`"
       - echo "Building the Docker image..."
       - docker build --tag $REPOSITORY_URL:$TAG .
@@ -54,6 +54,7 @@ phases:
       - aws eks update-kubeconfig --name $EKS_CLUSTERNAME
       # Show time, applying manifests changes using kubectl
       - echo "Apply changes to kube manifests"
+      - kubectl delete job client -n bohdansavshak
       - kubectl apply -f config-files/eks-app-deployment/
       - echo "All done!!!! Kubernetes changes applied"
       # Create Artifacts which we can use if we want to continue our pipeline for other stages
