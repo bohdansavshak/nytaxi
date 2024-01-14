@@ -91,7 +91,7 @@ public class Client implements CommandLineRunner {
 
     List<Long> executionTime =
         Flux.fromIterable(taxiTrips)
-            .buffer(20)
+            .buffer(1000)
             .delayElements(Duration.ofSeconds(1))
             .flatMapIterable(e -> e)
             .flatMap(this::sendRequest)
@@ -104,7 +104,6 @@ public class Client implements CommandLineRunner {
     Path sampleDataPath = Paths.get(this.sampleDataPath);
     Set<String> existingFiles = getExistingFiles(sampleDataPath);
 
-    s3BucketName = "467576817753-bohdansavshak-nytaxi";
     DirectoryDownload directoryDownload =
         s3TransferManager.downloadDirectory(
             DownloadDirectoryRequest.builder()

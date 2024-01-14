@@ -48,6 +48,9 @@ spec:
               env:
                 - name: APP
                   value: total-calculator
+              envFrom:
+                - secretRef:
+                    name: bohdansavshak-secret
           restartPolicy: OnFailure
 ---
 apiVersion: apps/v1
