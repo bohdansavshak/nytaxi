@@ -87,8 +87,7 @@ public class Client implements CommandLineRunner {
   }
 
   private List<Long> sendWriteRequestsToFrontend(List<TaxiTrip> taxiTrips) {
-    log.info("Start sending taxi trips to frontend");
-    log.info("taxiTrips.size: {}", taxiTrips.size());
+    log.info("Start sending taxi trips to frontend, taxiTrips.size: {}", taxiTrips.size());
 
     List<Long> executionTime =
         Flux.fromIterable(taxiTrips)
