@@ -82,9 +82,10 @@ public class Client implements CommandLineRunner {
     var secondExecutionTime = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
     var finish2 = System.currentTimeMillis() - start2;
 
+    log.info("Percentiles for write requests.");
     List<Long> executionTimes =
         Stream.concat(firstExecutionTime.stream(), secondExecutionTime.stream()).toList();
-    logPercentiles(executionTimes, executionTimes.size() / (finish1 + finish2) / 1000);
+    logPercentiles(executionTimes, executionTimes.size() / ((finish1 + finish2) / 1000));
 
     log.info(
         "In total send: {} requests in: {} seconds",
