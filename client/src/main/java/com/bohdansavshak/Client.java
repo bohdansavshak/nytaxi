@@ -29,8 +29,6 @@ import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryDownload;
 import software.amazon.awssdk.transfer.s3.model.DirectoryDownload;
 import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
-
 @SpringBootApplication
 @Slf4j
 public class Client implements CommandLineRunner {
@@ -72,7 +70,7 @@ public class Client implements CommandLineRunner {
     var firstExecutionTime = sendWriteRequestsToFrontend(firstHalfOfTheYearTaxiTrips);
     var finish1 = System.currentTimeMillis() - start1;
 
-    sleepFor3minutes();
+    sleepFor2minutes();
 
     AtomicInteger counter = new AtomicInteger();
     sendRandomRequestsToGetDayTotal(counter);
@@ -94,9 +92,9 @@ public class Client implements CommandLineRunner {
     System.exit(0);
   }
 
-  private static void sleepFor3minutes() {
+  private static void sleepFor2minutes() {
     try {
-      Thread.sleep(Duration.ofMinutes(3));
+      Thread.sleep(Duration.ofMinutes(2));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
