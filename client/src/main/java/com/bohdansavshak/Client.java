@@ -7,7 +7,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,8 @@ import software.amazon.awssdk.transfer.s3.S3TransferManager;
 import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryDownload;
 import software.amazon.awssdk.transfer.s3.model.DirectoryDownload;
 import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
+
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 
 @SpringBootApplication
 @Slf4j
@@ -63,27 +68,123 @@ public class Client implements CommandLineRunner {
     List<TaxiTrip> secondHalfOfTheYearTaxiTripts =
         readSampleFile(Paths.get(sampleDataPath, secondHalfOfTheYearFile));
 
-    var start = System.currentTimeMillis();
+    var start1 = System.currentTimeMillis();
     var firstExecutionTime = sendWriteRequestsToFrontend(firstHalfOfTheYearTaxiTrips);
+    var finish1 = System.currentTimeMillis() - start1;
+
+    sleepFor3minutes();
+
+    AtomicInteger counter = new AtomicInteger();
+    sendRandomRequestsToGetDayTotal(counter);
+    sendRandomRequestsToGetMonthTotal(counter);
+
+    var start2 = System.currentTimeMillis();
     var secondExecutionTime = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
+    var finish2 = System.currentTimeMillis() - start2;
 
     List<Long> executionTimes =
         Stream.concat(firstExecutionTime.stream(), secondExecutionTime.stream()).toList();
+    logPercentiles(executionTimes, executionTimes.size() / (finish1 + finish2) / 1000);
 
-    logPercentiles(executionTimes, System.currentTimeMillis() - start);
-
-    log.info("In total send: {} requests", executionTimes.size());
-    log.info("Finished");
+    log.info(
+        "In total send: {} requests in: {} seconds",
+        executionTimes.size(),
+        (finish1 + finish2) / 1000);
     System.exit(0);
   }
 
-  private static void logPercentiles(List<Long> executionTime, long timeItTook) {
+  private static void sleepFor3minutes() {
+    try {
+      Thread.sleep(Duration.ofMinutes(3));
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void sendRandomRequestsToGetMonthTotal(AtomicInteger counter) {
+    var s2 = System.currentTimeMillis();
+    List<Long> executionTimesForMonthTotals =
+        Flux.range(1, 100)
+            .flatMap(
+                i -> {
+                  var s = System.currentTimeMillis();
+                  LocalDate randomDate = generateRandomDate(2018, 2018, Month.JANUARY, Month.JUNE);
+                  return webClient
+                      .get()
+                      .uri(
+                          uriBuilder ->
+                              uriBuilder
+                                  .path("/api/v1/total")
+                                  .queryParam("year", randomDate.getYear())
+                                  .queryParam("month", randomDate.getMonthValue())
+                                  .build())
+                      .accept(MediaType.APPLICATION_JSON)
+                      .retrieve()
+                      .bodyToMono(String.class)
+                      .map(
+                          e -> {
+                            int count = counter.incrementAndGet();
+                            log.info("Request {} : {}", count, e);
+                            return (System.currentTimeMillis() - s);
+                          });
+                })
+            .collectList()
+            .block();
+
+    log.info("Percentiles for get totals randomly 100 times for month data.");
+    logPercentiles(executionTimesForMonthTotals, System.currentTimeMillis() - s2);
+  }
+
+  private void sendRandomRequestsToGetDayTotal(AtomicInteger counter) {
+    var s1 = System.currentTimeMillis();
+    var executionTimesForGetTotalPerDay =
+        Flux.range(1, 1000)
+            .flatMap(
+                i -> {
+                  var s = System.currentTimeMillis();
+                  LocalDate randomDate = generateRandomDate(2018, 2018, Month.JANUARY, Month.JUNE);
+                  return webClient
+                      .get()
+                      .uri(
+                          uriBuilder ->
+                              uriBuilder
+                                  .path("/api/v1/total")
+                                  .queryParam("year", randomDate.getYear())
+                                  .queryParam("month", randomDate.getMonthValue())
+                                  .queryParam("day", randomDate.getDayOfMonth())
+                                  .build())
+                      .accept(MediaType.APPLICATION_JSON)
+                      .retrieve()
+                      .bodyToMono(String.class)
+                      .map(
+                          e -> {
+                            int count = counter.incrementAndGet();
+                            log.info("Request {} : {}", count, e);
+                            return (System.currentTimeMillis() - s);
+                          });
+                })
+            .collectList()
+            .block();
+    log.info("Percentiles for get totals randomly 1000 times for totals per day data.");
+    logPercentiles(executionTimesForGetTotalPerDay, System.currentTimeMillis() - s1);
+  }
+
+  private static void logPercentiles(List<Long> executionTime, long throughput) {
     List<Long> sortedExecutionTime = executionTime.stream().sorted().toList();
     log.info("99 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.99)));
     log.info("95 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.95)));
     log.info("90 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.9)));
     log.info("50 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.5)));
-    log.info("Took: {}", timeItTook);
+    log.info("throughput: {}", throughput);
+  }
+
+  public LocalDate generateRandomDate(
+      int startYear, int endYear, Month startMonth, Month endMonth) {
+    Random random = new Random();
+    int minDay = (int) LocalDate.of(startYear, startMonth, 1).toEpochDay();
+    int maxDay = (int) LocalDate.of(endYear, endMonth, endMonth.length(true)).toEpochDay();
+    long randomDay = minDay + random.nextInt(maxDay - minDay);
+    return LocalDate.ofEpochDay(randomDay);
   }
 
   private List<Long> sendWriteRequestsToFrontend(List<TaxiTrip> taxiTrips) {
@@ -91,9 +192,9 @@ public class Client implements CommandLineRunner {
 
     List<Long> executionTime =
         Flux.fromIterable(taxiTrips)
-            .buffer(1000)
-            .delayElements(Duration.ofSeconds(1))
-            .flatMapIterable(e -> e)
+            //            .buffer(2000)
+            //            .delayElements(Duration.ofSeconds(1))
+            //            .flatMapIterable(e -> e)
             .flatMap(this::sendRequest)
             .collectList()
             .block();
@@ -117,8 +218,6 @@ public class Client implements CommandLineRunner {
     completedDirectoryDownload
         .failedTransfers()
         .forEach(fail -> log.warn("Object [{}] failed to transfer", fail.toString()));
-    var failedTransferNumber = completedDirectoryDownload.failedTransfers().size();
-    log.info("Number of failed transfer number: {}", failedTransferNumber);
   }
 
   private static Set<String> getExistingFiles(Path directoryPath) {
