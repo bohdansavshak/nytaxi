@@ -51,7 +51,7 @@ spec:
               envFrom:
                 - secretRef:
                     name: bohdansavshak-secret
-          restartPolicy: OnFailure
+          restartPolicy: Never
 ---
 apiVersion: apps/v1
 kind: Deployment
