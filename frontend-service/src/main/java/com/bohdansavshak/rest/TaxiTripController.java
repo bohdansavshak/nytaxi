@@ -6,6 +6,7 @@ import com.bohdansavshak.kafka.producer.KafkaProducer;
 import com.bohdansavshak.kafka.producer.KafkaProducer.Response;
 import com.bohdansavshak.model.TaxiTrip;
 import com.bohdansavshak.respository.RedisRepository;
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -25,22 +26,29 @@ public class TaxiTripController {
   private final RedisRepository repository;
 
   @PostMapping(path = "/message", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public Mono<ResponseEntity<Response>> kafkaMessage(@RequestBody TaxiTrip taxiTrip) {
+  public Mono<ResponseEntity<Response>> kafkaMessage(@Valid @RequestBody TaxiTrip taxiTrip) {
+    taxiTrip.setDropOffDayMonthYear();
     return kafka.send(taxiTrip);
   }
 
   @GetMapping(path = "/total")
   public Mono<ResponseEntity<TotalResponse>> getTotal(
-      @RequestParam("year") Integer year,
-      @RequestParam("month") Integer month,
-      @RequestParam(value = "day", required = false) Integer day) {
+          @RequestParam("year") Integer year,
+          @RequestParam("month") Integer month,
+          @RequestParam(value = "day", required = false) Integer day) {
 
     if (day != null) {
       LocalDate date = LocalDate.of(year, month, day);
-      return repository.getTotalPerDay(date).map(total -> ok(new TotalResponse(total, date)));
+      return repository
+              .getTotalPerDay(date)
+              .map(total -> ok(new TotalResponse(total, date)))
+              .defaultIfEmpty(ResponseEntity.noContent().build());
     } else {
       LocalDate date = YearMonth.of(year, month).atEndOfMonth();
-      return repository.getTotalPerMonth(date).map(total -> ok(new TotalResponse(total, date)));
+      return repository
+              .getTotalPerMonth(date)
+              .map(total -> ok(new TotalResponse(total, date)))
+              .defaultIfEmpty(ResponseEntity.noContent().build());
     }
   }
 

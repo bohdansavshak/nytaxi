@@ -22,7 +22,6 @@ public class KafkaConsumer {
     log.info("----------------");
     TaxiTrip taxiTripPayload = taxiTrip.getPayload();
     log.info("new message received: {}", taxiTripPayload);
-    taxiTripPayload.setDropOffDayMonthYear();
 
     taxiTrip.getHeaders().forEach((s, o) -> log.info("Received message from kafka {} = {}", s, o));
     postgresTaxiTripRepository.save(taxiTripPayload).subscribe();

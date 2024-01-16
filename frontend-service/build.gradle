@@ -8,4 +8,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 }
