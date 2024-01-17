@@ -26,7 +26,7 @@ public class TaxiTripController {
   private final RedisRepository repository;
 
   @PostMapping(path = "/message", consumes = MediaType.APPLICATION_JSON_VALUE)
-  public Mono<ResponseEntity<Response>> kafkaMessage(@Valid @RequestBody TaxiTrip taxiTrip) {
+  public Mono<ResponseEntity<Response>> message(@Valid @RequestBody TaxiTrip taxiTrip) {
     taxiTrip.setDropOffDayMonthYear();
     return kafka.send(taxiTrip);
   }
