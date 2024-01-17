@@ -5,10 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import com.bohdansavshak.rest.validator.DateTimeFormat;
 
 @Data
@@ -39,10 +36,11 @@ public class TaxiTrip {
 
   private Integer dropOffYear;
 
+  @NotNull(message = "passengerCount is mandatory.")
   @Min(value = 1, message = "There must be at least 1 passenger, passengerCount must be present.")
   private Integer passengerCount;
 
-  @NotNull
+  @NotNull(message = "tripDistance is mandatory.")
   @PositiveOrZero(message = "tripDistance must be a positive value.")
   private BigDecimal tripDistance;
 
@@ -51,7 +49,6 @@ public class TaxiTrip {
 
   @NotNull(message = "doLocationId is mandatory.")
   private Integer doLocationId;
-
 
   private Boolean storeAndFwdFlag;
 

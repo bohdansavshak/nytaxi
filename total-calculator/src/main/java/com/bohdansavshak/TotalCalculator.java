@@ -12,6 +12,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.util.List;
+
+import static com.bohdansavshak.repository.db.DbTotalRepository.*;
+
 @SpringBootApplication
 @AllArgsConstructor
 @Slf4j
@@ -37,12 +41,12 @@ public class TotalCalculator implements CommandLineRunner {
   public void saveTotalsToRedis() {
     log.info("Start calculating totals per month and per day");
 
-    var totalsPerDay = dbTotalRepository.getTotalsPerDay();
-    var totalsPerMonth = dbTotalRepository.getTotalsPerMonth();
+    List<TotalPerDay> totalsPerDay = dbTotalRepository.getTotalsPerDay();
+    List<TotalPerMonth> totalsPerMonth = dbTotalRepository.getTotalsPerMonth();
     log.info("Finish calculating");
 
-    var redisTotalsPerDay = totalsPerDay.stream().map(RedisTotalPerDay::new).toList();
-    var redisTotalsPerMonth = totalsPerMonth.stream().map(RedisTotalPerMonth::new).toList();
+    List<RedisTotalPerDay> redisTotalsPerDay = totalsPerDay.stream().map(RedisTotalPerDay::new).toList();
+    List<RedisTotalPerMonth> redisTotalsPerMonth = totalsPerMonth.stream().map(RedisTotalPerMonth::new).toList();
 
     log.info("Save calculated totals to redis");
     redisTotalPerDayRepository.saveAll(redisTotalsPerDay);

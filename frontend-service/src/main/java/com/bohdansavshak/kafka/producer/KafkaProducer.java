@@ -16,6 +16,10 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class KafkaProducer {
 
+  public static final String MESSAGE_RECEIVED = "Message received";
+  public static final String FAILED_TO_DELIVER_MESSAGE =
+      "Failed to deliver message to kafka, Please re-try later";
+
   private final KafkaTemplate<Object, Object> template;
 
   public Mono<ResponseEntity<Response>> send(TaxiTrip taxiTrip) {
@@ -27,15 +31,14 @@ public class KafkaProducer {
         .map(
             result -> {
               log.info("Message sent successfully: {}", result.getRecordMetadata());
-              return ResponseEntity.ok().body(new Response("Message received"));
+              return ResponseEntity.ok().body(new Response(MESSAGE_RECEIVED));
             })
         .onErrorResume(
             error -> {
               log.error("Error sending message: {}", error.getMessage());
               return Mono.just(
                   ResponseEntity.internalServerError()
-                      .body(
-                          new Response("Failed to deliver message to kafka, Please re-try later")));
+                      .body(new Response(FAILED_TO_DELIVER_MESSAGE)));
             });
   }
 
