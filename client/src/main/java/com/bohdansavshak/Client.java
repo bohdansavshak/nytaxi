@@ -102,7 +102,7 @@ public class Client implements CommandLineRunner {
 
   private static void sleepFor2minutes() {
     try {
-      Thread.sleep(Duration.ofMillis(2));
+      Thread.sleep(Duration.ofSeconds(2));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -224,9 +224,6 @@ public class Client implements CommandLineRunner {
     }
     return existingFiles;
   }
-
-  record ErrorResponses(
-      LocalDateTime timestamp, Integer status, String error, List<String> errorMessages) {}
 
   private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
     var s = System.currentTimeMillis();
