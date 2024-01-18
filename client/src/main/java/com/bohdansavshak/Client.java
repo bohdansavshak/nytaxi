@@ -75,7 +75,7 @@ public class Client implements CommandLineRunner {
 
     sleepFor2minutes();
     var readExecutionTimes1 = sendRandomRequestsToGetTotal(TotalType.DAY, 1000);
-    var readExecutionTimes2 = sendRandomRequestsToGetTotal(TotalType.MONTH, 100);
+    var readExecutionTimes2 = sendRandomRequestsToGetTotal(TotalType.MONTH, 101);
 
     var writeExecutionTime2 = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
 
