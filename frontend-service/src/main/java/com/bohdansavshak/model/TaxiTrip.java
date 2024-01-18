@@ -26,18 +26,14 @@ public class TaxiTrip {
   @DateTimeFormat(pattern = "M/d/yyyy h:mm:ss a", message = "tpepDropoffDatetime invalid datatime format.")
   private String tpepDropoffDatetime;
 
-  @NotNull(message = "dropOffDay day is mandatory.")
-  @Positive
   private Integer dropOffDay;
 
-  @NotNull(message = "dropOffMonth month is mandatory.")
-  @Positive
   private Integer dropOffMonth;
 
   private Integer dropOffYear;
 
   @NotNull(message = "passengerCount is mandatory.")
-  @Min(value = 1, message = "There must be at least 1 passenger, passengerCount must be present.")
+  @PositiveOrZero(message = "passengerCount must be positive number or zero")
   private Integer passengerCount;
 
   @NotNull(message = "tripDistance is mandatory.")
@@ -71,7 +67,7 @@ public class TaxiTrip {
   private BigDecimal tollsAmount;
 
   @NotNull(message = "totalAmount is mandatory.")
-  @Positive
+  @Positive(message = "totalAmount must be a positive number")
   private BigDecimal totalAmount;
 
   // relations

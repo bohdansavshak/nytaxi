@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
@@ -70,13 +69,13 @@ class TaxiTripControllerTest {
   }
 
   @Test
-  void message_passengerCountLessThan1_expected400ErrorReturned() {
+  void message_passengerCountMinus1_expected400ErrorReturned() {
     // SETUP
     TaxiTrip taxiTrip = prepareTaxiTrip();
-    taxiTrip.setPassengerCount(0);
+    taxiTrip.setPassengerCount(-1);
 
     String expectedErrorMessage =
-        "There must be at least 1 passenger, passengerCount must be present.";
+        "passengerCount must be positive number or zero";
 
     // ACT
     WebTestClient.ResponseSpec response = makeRequestPostMessage(taxiTrip);
@@ -206,6 +205,21 @@ class TaxiTripControllerTest {
   }
 
   @Test
+  void message_totalAmountNegative_expected400ErrorReturned() {
+    // SETUP
+    TaxiTrip taxiTrip = prepareTaxiTrip();
+    taxiTrip.setTotalAmount(BigDecimal.valueOf(-1));
+
+    String expectedErrorMessage = "totalAmount must be a positive number";
+
+    // ACT
+    WebTestClient.ResponseSpec response = makeRequestPostMessage(taxiTrip);
+
+    // VERIFY
+    verifyBadRequest(response, expectedErrorMessage);
+  }
+
+  @Test
   void message_totalAmountMissing_expected400ErrorReturned() {
     // SETUP
     TaxiTrip taxiTrip = prepareTaxiTrip();
@@ -323,36 +337,6 @@ class TaxiTripControllerTest {
     verifyBadRequest(response, expectedErrorMessage);
   }
 
-  @Test
-  void message_dropOffMonthMissing_expected400ErrorReturned() {
-    // SETUP
-    TaxiTrip taxiTrip = prepareTaxiTrip();
-    taxiTrip.setDropOffMonth(null);
-
-    String expectedErrorMessage = "dropOffMonth month is mandatory.";
-
-    // ACT
-    WebTestClient.ResponseSpec response = makeRequestPostMessage(taxiTrip);
-
-    // VERIFY
-    verifyBadRequest(response, expectedErrorMessage);
-  }
-
-  @Test
-  void message_dropOffDayMissing_expected400ErrorReturned() {
-    // SETUP
-    TaxiTrip taxiTrip = prepareTaxiTrip();
-    taxiTrip.setDropOffDay(null);
-
-    String expectedErrorMessage = "dropOffDay day is mandatory.";
-
-    // ACT
-    WebTestClient.ResponseSpec response = makeRequestPostMessage(taxiTrip);
-
-    // VERIFY
-    verifyBadRequest(response, expectedErrorMessage);
-  }
-
   private void verifyBadRequest(WebTestClient.ResponseSpec response, String expectedErrorMessage) {
     response.expectStatus().isBadRequest();
 
@@ -384,8 +368,6 @@ class TaxiTripControllerTest {
     TaxiTrip taxiTrip = new TaxiTrip();
     taxiTrip.setTpepPickupDatetime("12/31/2022 08:30:00 PM");
     taxiTrip.setTpepDropoffDatetime("12/31/2022 09:00:00 PM");
-    taxiTrip.setDropOffDay(1);
-    taxiTrip.setDropOffMonth(2);
     taxiTrip.setPassengerCount(2);
     taxiTrip.setTripDistance(new BigDecimal("15.25"));
     taxiTrip.setPuLocationId(123);
@@ -398,7 +380,6 @@ class TaxiTripControllerTest {
     taxiTrip.setTipAmount(new BigDecimal("10.00"));
     taxiTrip.setTollsAmount(new BigDecimal("3.00"));
     taxiTrip.setTotalAmount(new BigDecimal("71.50"));
-    taxiTrip.setDropOffDay(1);
     taxiTrip.setVendorId(12345L);
     taxiTrip.setRateCodeId(1L);
     taxiTrip.setPaymentTypeId(2L);

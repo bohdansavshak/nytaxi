@@ -3,25 +3,28 @@ package com.bohdansavshak;
 import com.bohdansavshak.model.TaxiTrip;
 import java.io.*;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import software.amazon.awssdk.transfer.s3.S3TransferManager;
@@ -57,6 +60,8 @@ public class Client implements CommandLineRunner {
     SpringApplication.run(Client.class, args);
   }
 
+  record ExecutionTimesAndTotalExecutionTime(List<Long> executionTimes, long total) {}
+
   @Override
   public void run(String... args) {
     downloadOnlyNewFilesToSampleDataFolderFromS3();
@@ -66,106 +71,93 @@ public class Client implements CommandLineRunner {
     List<TaxiTrip> secondHalfOfTheYearTaxiTripts =
         readSampleFile(Paths.get(sampleDataPath, secondHalfOfTheYearFile));
 
-    var start1 = System.currentTimeMillis();
-    var firstExecutionTime = sendWriteRequestsToFrontend(firstHalfOfTheYearTaxiTrips);
-    var finish1 = System.currentTimeMillis() - start1;
+    var writeExecutionTime1 = sendWriteRequestsToFrontend(firstHalfOfTheYearTaxiTrips);
 
     sleepFor2minutes();
+    var readExecutionTimes1 = sendRandomRequestsToGetTotal(TotalType.DAY, 1000);
+    var readExecutionTimes2 = sendRandomRequestsToGetTotal(TotalType.MONTH, 100);
 
-    AtomicInteger counter = new AtomicInteger();
-    sendRandomRequestsToGetDayTotal(counter);
-    sendRandomRequestsToGetMonthTotal(counter);
+    var writeExecutionTime2 = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
 
-    var start2 = System.currentTimeMillis();
-    var secondExecutionTime = sendWriteRequestsToFrontend(secondHalfOfTheYearTaxiTripts);
-    var finish2 = System.currentTimeMillis() - start2;
+    List<Long> writeExecutionTimes = logPercentiles("Percentiles for write requests.", writeExecutionTime1, writeExecutionTime2);
+    List<Long> readExecutionTimes = logPercentiles("Percentiles for read requests.", readExecutionTimes1, readExecutionTimes2);
 
-    log.info("Percentiles for write requests.");
-    List<Long> executionTimes =
-        Stream.concat(firstExecutionTime.stream(), secondExecutionTime.stream()).toList();
-    logPercentiles(executionTimes, executionTimes.size() / ((finish1 + finish2) / 1000));
+    logTotalNumberOfRequestsInSeconds("In total send: {} write requests in: {} seconds", writeExecutionTimes, writeExecutionTime1, writeExecutionTime2);
+    logTotalNumberOfRequestsInSeconds("In total send: {} read requests in: {} seconds", readExecutionTimes, readExecutionTimes1, readExecutionTimes2);
 
-    log.info(
-        "In total send: {} requests in: {} seconds",
-        executionTimes.size(),
-        (finish1 + finish2) / 1000);
     System.exit(0);
+  }
+
+  private static List<Long> logPercentiles(String s, ExecutionTimesAndTotalExecutionTime readExecutionTimes1, ExecutionTimesAndTotalExecutionTime readExecutionTimes2) {
+    log.info(s);
+    List<Long> readExecutionTimes = Stream.concat(readExecutionTimes1.executionTimes().stream(), readExecutionTimes2.executionTimes().stream()).toList();
+    long throughput = readExecutionTimes.size() / (((readExecutionTimes1.total() + readExecutionTimes2.total())) / 1000);
+    logPercentiles(readExecutionTimes, throughput);
+    return readExecutionTimes;
+  }
+
+  private static void logTotalNumberOfRequestsInSeconds(String s, List<Long> readExecutionTimes, ExecutionTimesAndTotalExecutionTime readExecutionTimes1, ExecutionTimesAndTotalExecutionTime readExecutionTimes2) {
+    log.info(s, readExecutionTimes.size(), (readExecutionTimes1.total() + readExecutionTimes2.total()) / 1000);
   }
 
   private static void sleepFor2minutes() {
     try {
-      Thread.sleep(Duration.ofMinutes(2));
+      Thread.sleep(Duration.ofMillis(2));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private void sendRandomRequestsToGetMonthTotal(AtomicInteger counter) {
-    var s2 = System.currentTimeMillis();
-    List<Long> executionTimesForMonthTotals =
-        Flux.range(1, 100)
+  private ExecutionTimesAndTotalExecutionTime sendRandomRequestsToGetTotal(
+      TotalType totalType, int numberOfRequests) {
+    var s = System.currentTimeMillis();
+
+    AtomicInteger counter = new AtomicInteger();
+    List<Long> executionTimes =
+        Flux.range(1, numberOfRequests)
             .flatMap(
                 i -> {
-                  var s = System.currentTimeMillis();
                   LocalDate randomDate = generateRandomDate(2018, 2018, Month.JANUARY, Month.JUNE);
-                  return webClient
-                      .get()
-                      .uri(
-                          uriBuilder ->
-                              uriBuilder
-                                  .path("/api/v1/total")
-                                  .queryParam("year", randomDate.getYear())
-                                  .queryParam("month", randomDate.getMonthValue())
-                                  .build())
-                      .accept(MediaType.APPLICATION_JSON)
-                      .retrieve()
-                      .bodyToMono(String.class)
-                      .map(
-                          e -> {
-                            int count = counter.incrementAndGet();
-                            log.info("Request {} : {}", count, e);
-                            return (System.currentTimeMillis() - s);
-                          });
+                  return sendRequest(counter, totalType, randomDate);
                 })
             .collectList()
             .block();
 
-    log.info("Percentiles for get totals randomly 100 times for month data.");
-    logPercentiles(executionTimesForMonthTotals, System.currentTimeMillis() - s2);
+    return new ExecutionTimesAndTotalExecutionTime(
+        executionTimes, (System.currentTimeMillis() - s));
   }
 
-  private void sendRandomRequestsToGetDayTotal(AtomicInteger counter) {
-    var s1 = System.currentTimeMillis();
-    var executionTimesForGetTotalPerDay =
-        Flux.range(1, 1000)
-            .flatMap(
-                i -> {
-                  var s = System.currentTimeMillis();
-                  LocalDate randomDate = generateRandomDate(2018, 2018, Month.JANUARY, Month.JUNE);
-                  return webClient
-                      .get()
-                      .uri(
-                          uriBuilder ->
-                              uriBuilder
-                                  .path("/api/v1/total")
-                                  .queryParam("year", randomDate.getYear())
-                                  .queryParam("month", randomDate.getMonthValue())
-                                  .queryParam("day", randomDate.getDayOfMonth())
-                                  .build())
-                      .accept(MediaType.APPLICATION_JSON)
-                      .retrieve()
-                      .bodyToMono(String.class)
-                      .map(
-                          e -> {
-                            int count = counter.incrementAndGet();
-                            log.info("Request {} : {}", count, e);
-                            return (System.currentTimeMillis() - s);
-                          });
-                })
-            .collectList()
-            .block();
-    log.info("Percentiles for get totals randomly 1000 times for totals per day data.");
-    logPercentiles(executionTimesForGetTotalPerDay, System.currentTimeMillis() - s1);
+  enum TotalType {
+    DAY,
+    MONTH
+  }
+
+  private Mono<Long> sendRequest(AtomicInteger counter, TotalType totalType, LocalDate randomDate) {
+    var s = System.currentTimeMillis();
+    return webClient
+        .get()
+        .uri(uriBuilder -> getUri(uriBuilder, randomDate, totalType))
+        .accept(MediaType.APPLICATION_JSON)
+        .exchange()
+        .flatMap(clientResponse -> clientResponse.bodyToMono(String.class))
+        .map(
+            e -> {
+              int count = counter.incrementAndGet();
+              log.info("Request {} : {}", count, e);
+              return (System.currentTimeMillis() - s);
+            });
+  }
+
+  private static URI getUri(UriBuilder uriBuilder, LocalDate randomDate, TotalType totalType) {
+    UriBuilder uri =
+        uriBuilder
+            .path("/api/v1/total")
+            .queryParam("year", randomDate.getYear())
+            .queryParam("month", randomDate.getMonthValue());
+    if (totalType == TotalType.DAY) {
+      uri.queryParam("day", randomDate.getDayOfMonth());
+    }
+    return uri.build();
   }
 
   private static void logPercentiles(List<Long> executionTime, long throughput) {
@@ -186,9 +178,10 @@ public class Client implements CommandLineRunner {
     return LocalDate.ofEpochDay(randomDay);
   }
 
-  private List<Long> sendWriteRequestsToFrontend(List<TaxiTrip> taxiTrips) {
+  private ExecutionTimesAndTotalExecutionTime sendWriteRequestsToFrontend(
+      List<TaxiTrip> taxiTrips) {
     log.info("Start sending taxi trips to frontend, taxiTrips.size: {}", taxiTrips.size());
-
+    var s = System.currentTimeMillis();
     List<Long> executionTime =
         Flux.fromIterable(taxiTrips)
             //            .buffer(2000)
@@ -197,7 +190,7 @@ public class Client implements CommandLineRunner {
             .flatMap(this::sendRequest)
             .collectList()
             .block();
-    return executionTime;
+    return new ExecutionTimesAndTotalExecutionTime(executionTime, (System.currentTimeMillis() - s));
   }
 
   private void downloadOnlyNewFilesToSampleDataFolderFromS3() {
@@ -232,6 +225,9 @@ public class Client implements CommandLineRunner {
     return existingFiles;
   }
 
+  record ErrorResponses(
+      LocalDateTime timestamp, Integer status, String error, List<String> errorMessages) {}
+
   private Mono<Long> sendRequest(TaxiTrip taxiTrip) {
     var s = System.currentTimeMillis();
     return webClient
@@ -240,7 +236,33 @@ public class Client implements CommandLineRunner {
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .body(BodyInserters.fromValue(taxiTrip))
         .retrieve()
+        .onStatus(
+            HttpStatusCode::is4xxClientError,
+            response ->
+                response
+                    .bodyToMono(String.class)
+                    .flatMap(
+                        e ->
+                            Mono.just(
+                                new RuntimeException(
+                                    "400 response status " + e + ", request body: " + taxiTrip))))
+        .onStatus(
+            HttpStatusCode::is4xxClientError,
+            response ->
+                response
+                    .bodyToMono(String.class)
+                    .flatMap(
+                        e ->
+                            Mono.just(
+                                new RuntimeException(
+                                    "500 response status " + e + ", request body: " + taxiTrip))))
         .bodyToMono(TaxiTrip.class)
+        .onErrorResume(
+            RuntimeException.class,
+            ex -> {
+              log.info("Error message: {}", ex.getMessage());
+              return Mono.just(new TaxiTrip());
+            })
         .map(e -> (System.currentTimeMillis() - s));
   }
 
