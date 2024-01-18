@@ -102,7 +102,7 @@ public class Client implements CommandLineRunner {
 
   private static void sleepFor2minutes() {
     try {
-      Thread.sleep(Duration.ofMillis(2));
+      Thread.sleep(Duration.ofMinutes(2));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
