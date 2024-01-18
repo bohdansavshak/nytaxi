@@ -102,7 +102,7 @@ public class Client implements CommandLineRunner {
 
   private static void sleepFor2minutes() {
     try {
-      Thread.sleep(Duration.ofSeconds(2));
+      Thread.sleep(Duration.ofMillis(2));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -166,7 +166,7 @@ public class Client implements CommandLineRunner {
     log.info("95 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.95)));
     log.info("90 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.9)));
     log.info("50 percentile: {}", sortedExecutionTime.get((int) (executionTime.size() * 0.5)));
-    log.info("throughput: {}", throughput);
+    log.info("throughput: {} per second", throughput);
   }
 
   public LocalDate generateRandomDate(
