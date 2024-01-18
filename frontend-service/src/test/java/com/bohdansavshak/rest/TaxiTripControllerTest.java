@@ -75,7 +75,7 @@ class TaxiTripControllerTest {
     taxiTrip.setPassengerCount(-1);
 
     String expectedErrorMessage =
-        "passengerCount must be positive number or zero1";
+        "passengerCount must be positive number or zero";
 
     // ACT
     WebTestClient.ResponseSpec response = makeRequestPostMessage(taxiTrip);
