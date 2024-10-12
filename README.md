@@ -1,5 +1,6 @@
-# Link to Project Promotion Plan
-https://docs.google.com/document/d/1I-NU_J8tkkjC_YEnKh7cH7VKzgorLiq8W_BJwD99AIE/edit?usp=sharing
+# System Architecture Diagram
+![img.png](img.png)
+
 
 # API Documentation
 
