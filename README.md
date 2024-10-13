@@ -1,4 +1,4 @@
-# NY Taxi pet project. 
+# NY Taxi 
 Two endpoints:
  - taxi trip (POST)
  - statistics of all the trips (GET)
