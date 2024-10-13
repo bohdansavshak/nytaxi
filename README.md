@@ -1,3 +1,8 @@
+# NY Taxi pet project. 
+Two endpoints:
+ - taxi trip (POST)
+ - statistics of all the trips (GET)
+
 # System Architecture Diagram
 ![img.png](img.png)
 
